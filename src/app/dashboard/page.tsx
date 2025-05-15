@@ -1,11 +1,9 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const { user, signOut, loading } = useAuth();
-  const router = useRouter();
 
   if (loading) {
     return (
@@ -40,7 +38,7 @@ export default function Dashboard() {
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Welcome to your Habit Dashboard</h2>
           <p className="text-gray-600 dark:text-gray-300">
-            This is where you'll track your daily habits. Features coming soon!
+            This is where you will track your daily habits. Features coming soon!
           </p>
         </div>
       </main>

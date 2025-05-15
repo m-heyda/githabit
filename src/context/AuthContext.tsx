@@ -2,13 +2,14 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, User } from '@/lib/supabase';
+import { AuthError } from "@supabase/supabase-js";
 import { useRouter } from 'next/navigation';
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 };
 

@@ -27,8 +27,12 @@ export default function Login() {
       }
       
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during sign in');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An error occurred during sign in');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,7 +100,7 @@ export default function Login() {
 
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
+            Do not have an account?{' '}
             <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign up
             </Link>
