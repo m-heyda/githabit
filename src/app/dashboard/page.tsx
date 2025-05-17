@@ -1,21 +1,73 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { HabitForm } from '@/components/HabitForm';
+import { HabitList } from '@/components/HabitList';
+import { Habit } from '@/lib/supabase';
+import { createHabit, getHabits, deleteHabit } from '@/lib/habit-service';
+import { CreateHabitData } from '@/lib/habit-service';
 
 export default function Dashboard() {
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // If we're not loading and there's no user, redirect to login
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push('/login');
     }
-  }, [loading, user, router]);
+  }, [authLoading, user, router]);
 
-  if (loading) {
+  // Fetch habits when the component mounts
+  useEffect(() => {
+    if (user) {
+      fetchHabits();
+    }
+  }, [user]);
+
+  const fetchHabits = async () => {
+    try {
+      setLoading(true);
+      const habitsData = await getHabits();
+      setHabits(habitsData);
+    } catch (err) {
+      console.error('Error fetching habits:', err);
+      setError('Failed to load habits. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddHabit = async (habitData: CreateHabitData) => {
+    try {
+      const newHabit = await createHabit(habitData);
+      setHabits(prevHabits => [newHabit, ...prevHabits]);
+      setShowForm(false);
+    } catch (err) {
+      console.error('Error adding habit:', err);
+      throw err; // Re-throw to be handled by the form
+    }
+  };
+
+  const handleDeleteHabit = async (habit: Habit) => {
+    if (window.confirm(`Are you sure you want to delete "${habit.name}"?`)) {
+      try {
+        await deleteHabit(habit.id);
+        setHabits(prevHabits => prevHabits.filter(h => h.id !== habit.id));
+      } catch (err) {
+        console.error('Error deleting habit:', err);
+        setError('Failed to delete habit. Please try again.');
+      }
+    }
+  };
+
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -50,11 +102,51 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Welcome to your Habit Dashboard</h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            This is where you will track your daily habits. Features coming soon!
-          </p>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+            <button
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              onClick={() => setError(null)}
+            >
+              <span className="sr-only">Close</span>
+              <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+              </svg>
+            </button>
+          </div>
+        )}
+
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Your Habits</h2>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              {showForm ? 'Cancel' : 'Add New Habit'}
+            </button>
+          </div>
+
+          {showForm && (
+            <div className="mb-6">
+              <HabitForm
+                onSubmit={handleAddHabit}
+                onCancel={() => setShowForm(false)}
+              />
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">Loading habits...</p>
+            </div>
+          ) : (
+            <HabitList
+              habits={habits}
+              onDeleteHabit={handleDeleteHabit}
+            />
+          )}
         </div>
       </main>
     </div>
