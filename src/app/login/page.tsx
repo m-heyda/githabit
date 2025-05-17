@@ -20,12 +20,14 @@ export default function Login() {
 
     try {
       const { error } = await signIn(email, password);
-      
+
       if (error) {
         setError(error.message);
         return;
       }
-      
+
+      // The router.refresh() is already called in the signIn function
+      // This ensures the middleware picks up the new session
       router.push('/dashboard');
     } catch (err: unknown) {
       if (err instanceof Error) {

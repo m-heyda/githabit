@@ -1,8 +1,9 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, User } from '@/lib/supabase';
-import { AuthError } from "@supabase/supabase-js";
+import { createClient } from '@/lib/supabase';
+import { User } from '@/lib/supabase';
+import { AuthError, Session } from "@supabase/supabase-js";
 import { useRouter } from 'next/navigation';
 
 type AuthContextType = {
@@ -19,16 +20,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const supabase = createClient();
 
   useEffect(() => {
     // Check active session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session?.user) {
         setUser(session.user as User);
       }
-      
+
       setLoading(false);
     };
 
@@ -42,6 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setUser(null);
         }
+
+        // Force a router refresh to update server state
+        router.refresh();
         setLoading(false);
       }
     );
@@ -49,10 +54,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [router, supabase]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) {
+      // Force a router refresh to update server state
+      router.refresh();
+    }
     return { error };
   };
 
@@ -63,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    router.refresh();
     router.push('/login');
   };
 

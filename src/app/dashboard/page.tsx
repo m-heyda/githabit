@@ -1,9 +1,19 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const { user, signOut, loading } = useAuth();
+  const router = useRouter();
+
+  // If we're not loading and there's no user, redirect to login
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
 
   if (loading) {
     return (
@@ -13,6 +23,11 @@ export default function Dashboard() {
         </div>
       </div>
     );
+  }
+
+  // If no user, show nothing while redirecting
+  if (!user) {
+    return null;
   }
 
   return (

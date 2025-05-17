@@ -1,11 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
-// These environment variables need to be set in .env.local
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-// Create a single supabase client for the entire app
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a Supabase client for use in client components
+export const createClient = () => {
+  return createClientComponentClient();
+};
 
 // Types for our database schema
 export type User = {
@@ -16,14 +15,14 @@ export type User = {
 
 export type HabitType = 'boolean' | 'unit';
 
-export type HabitColor = 
-  | 'red' 
-  | 'orange' 
-  | 'yellow' 
-  | 'green' 
-  | 'blue' 
-  | 'indigo' 
-  | 'purple' 
+export type HabitColor =
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'blue'
+  | 'indigo'
+  | 'purple'
   | 'pink';
 
 export type Habit = {

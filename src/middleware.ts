@@ -3,9 +3,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
+  // Create a response object that we'll manipulate
   const res = NextResponse.next();
+
+  // Create a Supabase client specifically for the middleware
   const supabase = createMiddlewareClient({ req, res });
-  
+
+  // Refresh the session - this will set the cookie if it exists
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -28,6 +32,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Return the response with the session
   return res;
 }
 
